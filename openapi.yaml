@@ -1,0 +1,245 @@
+openapi: 3.0.3
+info:
+  title: Search & Music Artist API
+  description: |
+    A scoring-based search API for matching people based on their attributes (name, music genres, movies, location, and musical artists).
+
+    ## Scoring System
+    - **Name match**: 4 points
+    - **Musical artist match**: 2 points
+    - **Music genre match**: 1 point
+    - **Movie match**: 1 point
+    - **Location match**: 1 point
+
+    ## Matching Rules
+    - All matches are case-insensitive
+    - Matches are substring-based (e.g., "nni" matches "Bonnie Wang")
+    - Each property category counts at most once (e.g., multiple movie matches = 1 point)
+    - Results sorted descending by score, then ascending by name
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /search:
+    get:
+      summary: Search for people
+      description: |
+        Search for people in the dataset based on a query string. Returns matches with scores and matched properties.
+
+        The search performs case-insensitive substring matching across all person attributes including:
+        - Name (4 points)
+        - Musical artists associated with their genres (2 points)
+        - Music genres (1 point)
+        - Movies (1 point)
+        - Location (1 point)
+      operationId: searchPeople
+      tags:
+        - Search
+      parameters:
+        - name: query
+          in: query
+          description: The search query string (case-insensitive, substring matching)
+          required: true
+          schema:
+            type: string
+            example: "ed"
+          examples:
+            nameMatch:
+              value: "eddy"
+              summary: Search by name
+              description: Returns Eddy Verde (name match = 4 points)
+            artistMatch:
+              value: "zeppelin"
+              summary: Search by artist
+              description: Returns all Rock fans (artist match = 2 points each)
+            movieMatch:
+              value: "avatar"
+              summary: Search by movie
+              description: Returns Eddy Verde (movie match = 1 point)
+            substringMatch:
+              value: "nni"
+              summary: Substring match
+              description: Returns Bonnie Wang (substring of name)
+      responses:
+        '200':
+          description: Successful search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchHit'
+              examples:
+                searchEd:
+                  summary: search('ed')
+                  value:
+                    - name: "Eddy Verde"
+                      score: 6
+                      matches: ["name", "artists"]
+                    - name: "Greta Heissenberger"
+                      score: 3
+                      matches: ["movies", "artists"]
+                    - name: "Jason Leo"
+                      score: 2
+                      matches: ["artists"]
+                    - name: "Doug Akridge"
+                      score: 2
+                      matches: ["artists"]
+                searchThe:
+                  summary: search('the')
+                  value:
+                    - name: "Jason Leo"
+                      score: 3
+                      matches: ["movies", "artists"]
+                    - name: "Eddy Verde"
+                      score: 1
+                      matches: ["movies"]
+                    - name: "Greta Heissenberger"
+                      score: 1
+                      matches: ["movies"]
+                    - name: "Justin Coker"
+                      score: 1
+                      matches: ["movies"]
+                noResults:
+                  summary: search('zzzzz')
+                  value: []
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /artists:
+    post:
+      summary: Add a music artist
+      description: |
+        Add a new musical artist to a specific genre in the in-memory dataset.
+
+        - If the genre doesn't exist, it will be created
+        - Duplicate artists (case-insensitive) are automatically prevented
+        - The change persists in memory until the server restarts
+        - Subsequent search queries will include the new artist
+      operationId: addMusicArtist
+      tags:
+        - Artists
+      requestBody:
+        description: The genre and artist to add
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddArtistRequest'
+            examples:
+              addToExistingGenre:
+                summary: Add to existing genre
+                value:
+                  genre: "Classical"
+                  artist: "Beethoven"
+              addToNewGenre:
+                summary: Add to new genre
+                value:
+                  genre: "Pop"
+                  artist: "Michael Jackson"
+      responses:
+        '204':
+          description: Artist successfully added (no content returned)
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingGenre:
+                  summary: Missing genre field
+                  value:
+                    error: "Invalid request body"
+                    details:
+                      genre: ["Required"]
+                missingArtist:
+                  summary: Missing artist field
+                  value:
+                    error: "Invalid request body"
+                    details:
+                      artist: ["Required"]
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    SearchHit:
+      type: object
+      required:
+        - name
+        - score
+        - matches
+      properties:
+        name:
+          type: string
+          description: The name of the person
+          example: "Eddy Verde"
+        score:
+          type: integer
+          description: The total match score (sum of all matched property weights)
+          minimum: 1
+          example: 6
+        matches:
+          type: array
+          description: Array of property names that contributed to the score
+          items:
+            type: string
+            enum: [name, artists, genres, movies, location]
+          example: ["name", "artists"]
+      example:
+        name: "Eddy Verde"
+        score: 6
+        matches: ["name", "artists"]
+
+    AddArtistRequest:
+      type: object
+      required:
+        - genre
+        - artist
+      properties:
+        genre:
+          type: string
+          description: The music genre (case-insensitive, creates new genre if it doesn't exist)
+          minLength: 1
+          example: "Classical"
+        artist:
+          type: string
+          description: The artist name to add (duplicates are prevented with case-insensitive comparison)
+          minLength: 1
+          example: "Beethoven"
+      example:
+        genre: "Classical"
+        artist: "Beethoven"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Internal server error"
+        details:
+          type: object
+          description: Additional error details (for validation errors)
+          additionalProperties: true
+      example:
+        error: "Internal server error"
+
+tags:
+  - name: Search
+    description: Search operations for finding people
+  - name: Artists
+    description: Operations for managing music artists

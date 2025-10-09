@@ -1,4 +1,4 @@
-import { ArtistsByGenre, Person } from "./types";
+import { ArtistsByGenre, Person } from "./types.js";
 
 export const PEOPLE: Person[] = [
   {

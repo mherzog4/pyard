@@ -7,7 +7,7 @@ export type Person = {
 
 export type ArtistsByGenre = Record<string, string[]>;
 
-export type searchHit = {
+export type SearchHit = {
   name: string;
   score: number;
   matches: Array<"name" | "genres" | "movies" | "location" | "artists">;
