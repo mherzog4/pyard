@@ -39,6 +39,15 @@ export const PEOPLE: Person[] = [
   },
 ];
 
+const INITIAL_ARTISTS: ArtistsByGenre = {
+  Rock: ["Led Zeppelin", "AC/DC", "Rolling Stones"],
+  Country: ["Alabama", "Rascal Flatts"],
+  Classical: ["Mozart", "Bach", "Chopin"],
+  Jazz: ["Miles Davis Quintet", "Duke Ellington", "Louis Armstrong"],
+  Ska: ["Sublime", "Reel Big Fish", "The Mighty Mighty Bosstones"],
+  Blues: ["John Mayer Trio", "B.B. King", "Eric Clapton"],
+};
+
 export const ARTISTS_BY_GENRE: ArtistsByGenre = {
   Rock: ["Led Zeppelin", "AC/DC", "Rolling Stones"],
   Country: ["Alabama", "Rascal Flatts"],
@@ -47,3 +56,8 @@ export const ARTISTS_BY_GENRE: ArtistsByGenre = {
   Ska: ["Sublime", "Reel Big Fish", "The Mighty Mighty Bosstones"],
   Blues: ["John Mayer Trio", "B.B. King", "Eric Clapton"],
 };
+
+export function resetArtistsData(): void {
+  Object.keys(ARTISTS_BY_GENRE).forEach(key => delete ARTISTS_BY_GENRE[key]);
+  Object.assign(ARTISTS_BY_GENRE, JSON.parse(JSON.stringify(INITIAL_ARTISTS)));
+}

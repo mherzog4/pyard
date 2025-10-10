@@ -98,11 +98,11 @@ The search function uses a weighted scoring system:
 | Location          | 1      | Query matches person's location                |
 
 ### Matching Rules
-- ✅ **Case-insensitive**: "EDDY" matches "Eddy Verde"
-- ✅ **Substring matching**: "nni" matches "Bonnie Wang"
-- ✅ **Count once per category**: Multiple movie matches = 1 point total
-- ✅ **Sorted results**: By score (DESC), then by name (ASC)
-- ✅ **Only positive scores**: Returns only results with score > 0
+- **Case-insensitive**: "EDDY" matches "Eddy Verde"
+- **Substring matching**: "nni" matches "Bonnie Wang"
+- **Count once per category**: Multiple movie matches = 1 point total
+- **Sorted results**: By score (DESC), then by name (ASC)
+- **Only positive scores**: Returns only results with score > 0
 
 ---
 
@@ -429,9 +429,9 @@ node test-api.js
 
 Expected output:
 ```
-✅ Passed: 23
-❌ Failed: 0
-🎉 All tests passed!
+Passed: 23
+Failed: 0
+All tests passed!
 ```
 
 ---

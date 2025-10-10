@@ -2,14 +2,20 @@ import express from "express";
 import { z } from "zod";
 import { search } from "./search.js";
 import { addMusicArtist } from "./artists.js";
+import { resetArtistsData } from "./data.js";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.send("Hello world!");
+});
+
+app.post("/reset", (_req, res) => {
+  resetArtistsData();
+  return res.sendStatus(204);
 });
 
 app.get("/search", (req, res) => {

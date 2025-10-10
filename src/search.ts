@@ -20,31 +20,26 @@ export function search(query: string): SearchHit[] {
     let score = 0;
     const matches: SearchHit["matches"] = [];
 
-    // name
     if (includesCI(person.name, q)) {
       score += WEIGHTS.name;
       matches.push("name");
     }
 
-    // genres (only once even if multiple genres match)
     if (anyIncludes(person.genres, q)) {
       score += WEIGHTS.genres;
       matches.push("genres");
     }
 
-    // movies (only once even if several match)
     if (anyIncludes(person.movies, q)) {
       score += WEIGHTS.movies;
       matches.push("movies");
     }
 
-    // location
     if (includesCI(person.location, q)) {
       score += WEIGHTS.location;
       matches.push("location");
     }
 
-    // artists: union of artists across person’s genres (count once)
     const artistsForPerson = person.genres.flatMap((g) => {
       const key = Object.keys(ARTISTS_BY_GENRE).find(
         (k) => k.toLowerCase() === g.toLowerCase(),
@@ -62,7 +57,6 @@ export function search(query: string): SearchHit[] {
     }
   }
 
-  // sort: score desc, then name asc (case-insensitive)
   hits.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
